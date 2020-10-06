@@ -3,6 +3,7 @@ package org.sitenv.vocabularies.loader.code;
 import org.apache.commons.lang3.text.StrBuilder;
 import org.apache.log4j.Logger;
 import org.sitenv.vocabularies.loader.BaseCodeLoader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedReader;
@@ -20,6 +21,8 @@ import java.util.List;
 public class CptLoader extends BaseCodeLoader {
     private static Logger logger = Logger.getLogger(CptLoader.class);
     private String oid;
+    @Value("${CPT_FILE_START_READ_LINE_NUMBER:34}")
+    private int CODES_START_AT_THIS_LINE_NUMBER;
 
     public CptLoader() {
         this.oid = CodeSystemOIDs.CPT4.codesystemOID();
@@ -40,8 +43,9 @@ public class CptLoader extends BaseCodeLoader {
                     fileReader = new FileReader(file);
                     br = new BufferedReader(fileReader);
                     String line;
+                    int currentLineNumberCounter = 0;
                     while ((line = br.readLine()) != null) {
-                        if (!line.isEmpty()) {
+                        if (!line.isEmpty() && currentLineNumberCounter >= CODES_START_AT_THIS_LINE_NUMBER-1) {
                             String code = line.substring(0, 5);
                             String displayName = line.substring(line.indexOf(" "));
                             buildCodeInsertQueryString(insertQueryBuilder, code, displayName, codeSystem, oid, CODES_IN_THIS_SYSTEM_ARE_ALWAYS_ACTIVE);
@@ -53,6 +57,7 @@ public class CptLoader extends BaseCodeLoader {
                                 pendingCount = 0;
                             }
                         }
+                        currentLineNumberCounter++;
                     }
                 }
             }
